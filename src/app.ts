@@ -11,7 +11,7 @@ dotenvFlow.config();
 
 import codeRoutes from './routes/codeRoutes';
 import profileRoutes from './routes/profileRoutes';
-import { apiLimiter } from './middleware/rateLimiter';
+// import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 import { initializeDatabases } from './config/database';
@@ -43,7 +43,7 @@ app.use(`${api}${path_config.user}`, profileRoutes);
 
 
 app.use(errorHandler);
-app.use('/api', apiLimiter);
+// app.use('/api', apiLimiter);
 const startServer = (): void => {
     try 
     {
