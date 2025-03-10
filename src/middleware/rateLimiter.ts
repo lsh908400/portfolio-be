@@ -22,6 +22,6 @@ export const updateLimiter = rateLimit({
     res.status(429).json({
       success: false,
       message: '너무 많은 업데이트 요청이 발생했습니다. 1분 후에 다시 시도해주세요.'
-    });
+    }); 
   }
 });
