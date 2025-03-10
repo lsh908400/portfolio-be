@@ -4,7 +4,7 @@ export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15분
   max: 100, // IP당 최대 요청 수
   // standardHeaders 속성 제거
-  legacyHeaders: false,
+//   legacyHeaders: false,
   handler: (req, res) => {
     res.status(429).json({
       success: false,
@@ -17,7 +17,7 @@ export const updateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1분
   max: 10, // IP당 최대 요청 수
   // standardHeaders 속성 제거
-  legacyHeaders: false,
+//   legacyHeaders: false,
   handler: (req, res) => {
     res.status(429).json({
       success: false,
