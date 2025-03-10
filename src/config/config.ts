@@ -17,17 +17,17 @@ const config = {
    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
    
    // MongoDB 설정
-   mongoURI: process.env.MONGO_URI || 'mongodb://portfolio:Alcls154-%2A@3.39.9.231:27017/portfolio?authSource=portfolio',
+   mongoURI: process.env.MONGO_URI || 'mongodb://portfolio:Alcls154-%2A@15.164.212.30:27017/portfolio?authSource=portfolio',
    
    // MySQL 설정
-   mysqlHost: process.env.MYSQL_HOST || '3.39.9.231',
+   mysqlHost: process.env.MYSQL_HOST || '15.164.212.30',
    mysqlPort: parseInt(process.env.MYSQL_PORT || '3306', 10),
    mysqlDatabase: process.env.MYSQL_DATABASE || 'portfolio',
    mysqlUser: process.env.MYSQL_USER || 'portfolio',
    mysqlPassword: process.env.MYSQL_PASSWORD || 'Alcls154-*',
    
    // Redis 설정
-   redisHost: process.env.REDIS_HOST || '3.39.9.231',
+   redisHost: process.env.REDIS_HOST || '15.164.212.30',
    redisPort: parseInt(process.env.REDIS_PORT || '6379', 10),
    redisPassword: process.env.REDIS_PASSWORD || 'Alcls154-*',
    

@@ -8,6 +8,7 @@ export const apiLimiter = rateLimit({
     message: {
         success: false,
         message: '너무 많은 요청이 발생했습니다. 15분 후에 다시 시도해주세요.',
+        stauts:429
     },
 });
 
@@ -19,5 +20,6 @@ export const updateLimiter = rateLimit({
     message: {
         success: false,
         message: '너무 많은 업데이트 요청이 발생했습니다. 1분 후에 다시 시도해주세요.',
+        status:429
     },
 });

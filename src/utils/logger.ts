@@ -17,10 +17,10 @@ const logger = winston.createLogger({
     transports: [
         // 콘솔 출력
         new winston.transports.Console({
-        format: winston.format.combine(
+        format: (winston.format.combine(
             winston.format.colorize(),
             winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`),
-        ),
+        )as any),
         }),
         // 파일 출력 (에러 레벨)
         new winston.transports.File({
