@@ -11,20 +11,25 @@ dotenvFlow.config();
 
 import codeRoutes from './routes/codeRoutes';
 import profileRoutes from './routes/profileRoutes';
+import categoryRoutes from './routes/categoryRoutes';
 // import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 import { initializeDatabases } from './config/database';
+import { syncCategory } from './models/mysql/category';
 
 const api = '/api'
 const path_config = {
     'code' : '/code',
     "user" : '/user',
+    "category" : "/category"
 }
 
 initializeDatabases();
+syncCategory();
 
 const app = express();
+
 
 app.use(morgan(config.env === 'development' ? 'dev' : 'combined'));
 app.use(helmet());
@@ -40,6 +45,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 // API 라우트
 app.use(`${api}${path_config.code}`, codeRoutes);
 app.use(`${api}${path_config.user}`, profileRoutes);
+app.use(`${api}${path_config.category}`, categoryRoutes);
 
 
 app.use(errorHandler);

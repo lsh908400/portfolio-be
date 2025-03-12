@@ -5,34 +5,61 @@ import { Request, Response } from 'express';
 
 // 프로젝트 루트 디렉토리 (프론트엔드 코드가 있는 위치)
 const frontendDir = path.resolve(__dirname, '../../../fe');
+const backendDir = path.resolve(__dirname, '../../');
 
-// 페이지 이름과 파일 경로 매핑
+// 페이지 이름과 파일 경로 매핑 (업데이트된 구조)
 const pageMapping: Record<string, { 
-  HTML?: string, 
-  API?: string, 
-  JS?: string, 
-  Front?: string, 
-  Back?: string 
+  API?: string | Array<{name: string, path: string}>, 
+  Front?: string | Array<{name: string, path: string}>, 
+  Back?: string | Array<{name: string, path: string}> 
 }> = {
   'profile': {
-    Front: '/src/component/pages/Profile/Introduce.tsx',
+    Front: [
+        {name: 'Profile', path: '/src/pages/Profile.tsx'},
+        {name: 'Introduce', path: '/src/component/pages/Profile/Introduce.tsx'}, 
+    ],
     Back: '../be/src/ctrl/profileCtrl.ts',
-    API: '/src/services/profileService.ts'
+    API: [
+        {name: 'ProfileFront', path: '/src/services/profileService.ts'},
+        {name: 'ProfileBack', path: '../be/src/routes/profileRoutes.ts'},
+    ]
   },
   'index' : {
-    Front: '/src/component/pages/Home/VideoBackground.tsx',
+    Front: [
+        {name: 'VideoBackground', path: '/src/component/pages/Home/VideoBackground.tsx'},
+        {name: 'Header', path: '/src/component/layout/Header.tsx'},
+    ],
     Back: '../be/src/ctrl/codeCtrl.ts',
-    API: '/src/services/codeService.ts'
-  }
+    API: [
+        {name: 'CodeFront', path:'/src/services/codeService.ts' },
+        {name: 'CodeBack', path:'../be/src/routes/codeRoutes.ts'},
+    ]
+  },
+  'trouble' : {
+    Front: [
+        {name: 'TroublShooting', path: '/src/pages/TroubleShooting.tsx'},
+        {name: 'PageIntroduce', path: '/src/component/pages/TroubleShooting/EditorIntro.tsx'},
+        {name: 'Board', path: '/src/component/pages/TroubleShooting/EditorTable.tsx'},
+        {name: 'Editor', path: '/src/component/pages/TroubleShooting/Editor.tsx'}
+    ],
+    Back: [
+        {name: 'Category', path:'../be/src/ctrl/categoryCtrl.ts'},
+    ],
+    API: [
+        {name: 'CategoryFront', path:'/src/services/codeService.ts'},
+        {name: 'CategoryBack', path:'../be/src/routes/categoryRoutes.ts'}
+    ]
+  },
   // 다른 페이지 매핑 추가
 };
 
 // 소스 파일 읽기 함수
-const readSourceFile = (filePath: string): string => {
+const readSourceFile = (filePath: string, isBackend: boolean = false): string => {
     try {
-        const fullPath = path.join(frontendDir, filePath);
+        const baseDir = isBackend ? backendDir : frontendDir;
+        const fullPath = path.join(baseDir, filePath);
         if (fs.existsSync(fullPath)) {
-        return fs.readFileSync(fullPath, 'utf8');
+            return fs.readFileSync(fullPath, 'utf8');
         }
         return `// 파일을 찾을 수 없습니다: ${filePath}`;
     } catch (error) {
@@ -41,7 +68,24 @@ const readSourceFile = (filePath: string): string => {
     }
 };
 
-// 페이지 소스 코드 가져오기 API
+// 복수 파일 처리 함수
+const processFiles = (
+    fileEntries: string | Array<{name: string, path: string}>,
+    isBackend: boolean = false
+): string | Array<{name: string, content: string}> => {
+    if (typeof fileEntries === 'string') {
+        // 단일 문자열 경로인 경우
+        return readSourceFile(fileEntries, isBackend);
+    } else if (Array.isArray(fileEntries)) {
+        // 배열인 경우 (하위 컴포넌트들)
+        return fileEntries.map(entry => ({
+            name: entry.name,
+            content: readSourceFile(entry.path, isBackend)
+        }));
+    }
+    return '';
+};
+
 // 간단한 모델 정의
 const CodeMapSchema = new Schema({
     _id: String,
@@ -51,10 +95,9 @@ const CodeMapSchema = new Schema({
 
 const CodeMapModel = mongoose.model('CodeMap', CodeMapSchema, 'codemap');
 
-// 기존 함수에 MongoDB 저장 기능 추가
+// 페이지 소스 코드 가져오기 API (기존 함수에 MongoDB 저장 기능 추가)
 export const putPageCode = async (req: Request, res: Response): Promise<void> => {
     const { pageName } = req.params;
-    console.log(pageName);
     
     if (!pageMapping[pageName]) {
         res.status(404).json({
@@ -65,11 +108,9 @@ export const putPageCode = async (req: Request, res: Response): Promise<void> =>
     }
     
     const sourceCode = {
-        HTML: pageMapping[pageName].HTML ? readSourceFile(pageMapping[pageName].HTML!) : '',
-        API: pageMapping[pageName].API ? readSourceFile(pageMapping[pageName].API!) : '',
-        JS: pageMapping[pageName].JS ? readSourceFile(pageMapping[pageName].JS!) : '',
-        Front: pageMapping[pageName].Front ? readSourceFile(pageMapping[pageName].Front!) : '',
-        Back: pageMapping[pageName].Back ? readSourceFile(pageMapping[pageName].Back!) : ''
+        API: pageMapping[pageName].API ? processFiles(pageMapping[pageName].API!) : '',
+        Front: pageMapping[pageName].Front ? processFiles(pageMapping[pageName].Front!) : '',
+        Back: pageMapping[pageName].Back ? processFiles(pageMapping[pageName].Back!, true) : ''
     };
 
     try {
@@ -109,14 +150,12 @@ export const putPageCode = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
-
 // 특정 페이지 코드 데이터 가져오기
 export const getPageCode = async (req: Request, res: Response): Promise<void> => {
     try {
         const { pageName } = req.params;
         
         // MongoDB에서 데이터 가져오기
-        const CodeMapModel = mongoose.model('CodeMap');
         const codeMapDoc = await CodeMapModel.findOne({ _id: 'main' });
         
         // 데이터가 없으면 빈 객체 사용
@@ -124,8 +163,8 @@ export const getPageCode = async (req: Request, res: Response): Promise<void> =>
         
         if (!codeMap[pageName]) {
             res.status(404).json({
-            success: false,
-            message: `${pageName} 페이지의 코드 데이터를 찾을 수 없습니다.`,
+                success: false,
+                message: `${pageName} 페이지의 코드 데이터를 찾을 수 없습니다.`,
             });
             return;
         }
@@ -134,7 +173,7 @@ export const getPageCode = async (req: Request, res: Response): Promise<void> =>
             success: true,
             data: codeMap[pageName],
         });
-        } catch (error) {
+    } catch (error) {
         console.error('MongoDB 읽기 오류:', error);
         res.status(500).json({
             success: false,
@@ -143,4 +182,3 @@ export const getPageCode = async (req: Request, res: Response): Promise<void> =>
         });
     }
 };
-
