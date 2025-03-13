@@ -60,8 +60,8 @@ export const deleteCategory = async (req: Request, res: Response, next : NextFun
 
         if (!category) {
             res.status(404).json({
-              success: false,
-              message: `ID ${id}에 해당하는 카테고리를 찾을 수 없습니다.`
+                success: false,
+                message: `ID ${id}에 해당하는 카테고리를 찾을 수 없습니다.`
             });
             return;
         }
@@ -82,7 +82,6 @@ export const deleteCategory = async (req: Request, res: Response, next : NextFun
 export const putCategories = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const categories = req.body;
-        console.log("수정할 카테고리:", categories);
         
         // 배열 형태로 받았는지 확인
         if (!Array.isArray(categories)) {
@@ -117,15 +116,15 @@ export const putCategories = async (req: Request, res: Response, next: NextFunct
             }
         });
       
-      res.status(200).json({
-        success: true,
-        message: '카테고리가 성공적으로 수정되었습니다.'
-      });
+        res.status(200).json({
+            success: true,
+            message: '카테고리가 성공적으로 수정되었습니다.'
+        });
     } catch (error) {
-      console.error('카테고리 수정 오류:', error);
-      res.status(400).json({
-        success: false,
-        message: error instanceof Error ? error.message : '카테고리 수정 중 오류가 발생했습니다.'
-      });
+        console.error('카테고리 수정 오류:', error);
+        res.status(400).json({
+            success: false,
+            message: error instanceof Error ? error.message : '카테고리 수정 중 오류가 발생했습니다.'
+        });
     }
   };

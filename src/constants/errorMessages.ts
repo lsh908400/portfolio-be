@@ -1,7 +1,7 @@
 // src/constants/errorMessages.ts
 
 // 에러 메시지 타입 정의
-export type ErrorDomain = 'user' | 'code' | 'introduction' | 'general';
+export type ErrorDomain = 'user' | 'code' | 'introduction' | 'general' | 'board';
 export type ErrorAction = 'create' | 'read' | 'update' | 'delete' | 'find' | 'validate';
 
 // 에러 메시지 인터페이스
@@ -52,6 +52,18 @@ const errorMessages: ErrorMessages = {
     alreadyExists: '이미 존재하는 자기소개서입니다.',
     invalidData: '유효하지 않은 자기소개서 데이터입니다.',
     unauthorized: '자기소개서 접근 권한이 없습니다.'
+  },
+  board:{
+    create:        '게시판 생성에 실패했습니다.',
+    read:          '게시판을 불러오는데 실패했습니다.',
+    update:        '게시판 업데이트에 실패했습니다.',
+    delete:        '게시판 삭제에 실패했습니다.',
+    find:          '게시판을 찾는데 실패했습니다.',
+    validate:      '게시판 데이터 검증에 실패했습니다.',
+    notFound:      '게시판을 찾을 수 없습니다.',
+    alreadyExists: '이미 존재하는 게시판입니다.',
+    invalidData:   '유효하지 않은 게시판 데이터입니다.',
+    unauthorized:  '게시판 접근 권한이 없습니다.'
   },
   general: {
     create: '리소스 생성에 실패했습니다.',

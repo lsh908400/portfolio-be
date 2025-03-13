@@ -38,16 +38,21 @@ const pageMapping: Record<string, {
   'trouble' : {
     Front: [
         {name: 'TroublShooting', path: '/src/pages/TroubleShooting.tsx'},
+        {name: 'EditorAside', path:'/src/component/pages/TroubleShooting/EditorAside.tsx'},
         {name: 'PageIntroduce', path: '/src/component/pages/TroubleShooting/EditorIntro.tsx'},
         {name: 'Board', path: '/src/component/pages/TroubleShooting/EditorTable.tsx'},
+        {name: 'CommonTable', path: '/src/component/util/CommonTable.tsx'},
         {name: 'Editor', path: '/src/component/pages/TroubleShooting/Editor.tsx'}
     ],
     Back: [
         {name: 'Category', path:'../be/src/ctrl/categoryCtrl.ts'},
+        {name: 'Board', path:'../be/src/ctrl/boardCtrl.ts'},
     ],
     API: [
-        {name: 'CategoryFront', path:'/src/services/codeService.ts'},
-        {name: 'CategoryBack', path:'../be/src/routes/categoryRoutes.ts'}
+        {name: 'CategoryFront', path:'/src/services/categoryService.ts'},
+        {name: 'CategoryBack', path:'../be/src/routes/categoryRoutes.ts'},
+        {name: 'BoardFront', path:'/src/services/boardService.ts'},
+        {name: 'BoardBack', path:'../be/src/routes/boardRoutes.ts'},
     ]
   },
   // 다른 페이지 매핑 추가

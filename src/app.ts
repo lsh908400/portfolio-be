@@ -12,6 +12,8 @@ dotenvFlow.config();
 import codeRoutes from './routes/codeRoutes';
 import profileRoutes from './routes/profileRoutes';
 import categoryRoutes from './routes/categoryRoutes';
+import boardRoutes from './routes/boardRoutes';
+import blockRoutes from './routes/blockRoutes';
 // import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
@@ -22,7 +24,9 @@ const api = '/api'
 const path_config = {
     'code' : '/code',
     "user" : '/user',
-    "category" : "/category"
+    "category" : "/category",
+    "board" : "/board",
+    "blocks" : "/blocks"
 }
 
 initializeDatabases();
@@ -46,6 +50,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(`${api}${path_config.code}`, codeRoutes);
 app.use(`${api}${path_config.user}`, profileRoutes);
 app.use(`${api}${path_config.category}`, categoryRoutes);
+app.use(`${api}${path_config.board}`, boardRoutes);
+app.use(`${api}${path_config.blocks}`, blockRoutes);
 
 
 app.use(errorHandler);

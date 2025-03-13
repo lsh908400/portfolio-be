@@ -1,6 +1,6 @@
 import { Request, Response , NextFunction} from 'express';
 import mongoose, { Schema } from 'mongoose';
-import { IntroductionSchema, UserSchema } from '../models/user';
+import { IntroductionSchema, UserSchema } from '../models/mongo/user';
 import { createBadRequestError, createNotFoundError } from '../constants/errorMessages';
 
 

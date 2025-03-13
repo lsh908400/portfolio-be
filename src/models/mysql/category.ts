@@ -3,9 +3,9 @@ import sequelize from '../../config/mysqldb';
 
 export async function syncCategory() {
     try {
-      await Category.sync({ force: false });
+        await Category.sync({ force: false });
     } catch (error) {
-      console.error('테이블 동기화 중 오류 발생:', error);
+        console.error('테이블 동기화 중 오류 발생:', error);
     }
 }
   
