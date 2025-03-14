@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getBlocks } from '../ctrl/blockCtrl';
+import { getBlocks, postBlocks } from '../ctrl/blockCtrl';
 
 const boardPath = {
     root : "/",
@@ -7,5 +7,6 @@ const boardPath = {
 const router = Router();
 
 router.get(``,getBlocks)
+router.post(``,postBlocks)
 
 export default router;

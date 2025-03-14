@@ -2,6 +2,9 @@ import { Request, Response , NextFunction} from 'express';
 import { category } from '../types/category';
 import Category from '../models/mysql/category';
 import logger from '../utils/logger';
+import mongoose from 'mongoose';
+import { BlockSchema } from '../models/mongo/block';
+import Board from '../models/mysql/board';
 
 
 export const postCategory = async (req: Request, res: Response, next : NextFunction): Promise<void> => {
@@ -51,13 +54,12 @@ export const getCategory = async (req: Request, res: Response, next : NextFuncti
     }
 };
 
-
-export const deleteCategory = async (req: Request, res: Response, next : NextFunction): Promise<void> => {
-
+const BlockModel = mongoose.model('Block', BlockSchema, 'block');
+export const deleteCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
         const category = await Category.findByPk(id);
-
+        
         if (!category) {
             res.status(404).json({
                 success: false,
@@ -66,12 +68,39 @@ export const deleteCategory = async (req: Request, res: Response, next : NextFun
             return;
         }
         
+        // 삭제할 카테고리에 속한 모든 보드의 ID 목록 조회
+        const boardsToDelete = await Board.findAll({
+            where: { categoryId: id },
+            attributes: ['id']
+        });
+        
+        const boardIds = boardsToDelete.map(board => board.id);
+        
+        // MongoDB에서 관련 블록 삭제 (보드 ID를 parentId로 가진 모든 블록)
+        let blocksDeletedCount = 0;
+        if (boardIds.length > 0) {
+            const blockDeleteResult = await BlockModel.deleteMany({
+                parentId: { $in: boardIds }
+            });
+            blocksDeletedCount = blockDeleteResult.deletedCount || 0;
+        }
+        
+        // MySQL에서 관련 보드 삭제
+        const boardsDeletedCount = await Board.destroy({
+            where: { categoryId: id }
+        });
+        
+        // 마지막으로 카테고리 삭제
         await category.destroy();
-
+        
         res.status(201).json({
             success: true,
-            data: null,
-            message: '카테고리가 성공적으로 삭제되었습니다.'
+            data: {
+                categoryDeleted: 1,
+                boardsDeleted: boardsDeletedCount,
+                blocksDeleted: blocksDeletedCount
+            },
+            message: '카테고리와 연관된 보드 및 블록이 성공적으로 삭제되었습니다.'
         });
     } catch (error) {
         return next(error);

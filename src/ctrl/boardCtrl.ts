@@ -2,6 +2,8 @@ import { Request, Response , NextFunction} from 'express';
 import Board from '../models/mysql/board';
 import { Op, where } from 'sequelize';
 import sequelize from '../config/mysqldb';
+import { BlockSchema } from '../models/mongo/block';
+import mongoose from 'mongoose';
 
 
 export const getBoards = async (req: Request, res: Response, next : NextFunction): Promise<void> => {
@@ -75,21 +77,21 @@ export const postBoard = async (req : Request, res : Response, next : NextFuncti
         return next(err)
     }
 }
-
-export const deleteBoards = async (req : Request, res : Response, next : NextFunction) : Promise<void> => {
-    try
-    {
-        const {deleteIds} = req.body;
-
+const BlockModel = mongoose.model('Block', BlockSchema, 'block');
+export const deleteBoards = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { deleteIds } = req.body;
+        
         if (!deleteIds || !Array.isArray(deleteIds) || deleteIds.length === 0) {
             res.status(400).json({
                 success: false,
                 message: '삭제할 게시글 ID가 제공되지 않았습니다.'
             });
-
+            
             return;
         }
-
+        
+        // MySQL에서 Board 삭제
         const deletedCount = await Board.destroy({
             where: {
                 id: {
@@ -97,7 +99,7 @@ export const deleteBoards = async (req : Request, res : Response, next : NextFun
                 }
             }
         });
-
+        
         if (deletedCount === 0) {
             res.status(404).json({
                 success: false,
@@ -105,21 +107,26 @@ export const deleteBoards = async (req : Request, res : Response, next : NextFun
             });
             return;
         }
-
+        
+        // MongoDB에서 관련된 Block 삭제
+        const blockDeleteResult = await BlockModel.deleteMany({ 
+            parentId: { $in: deleteIds } 
+        });
+        
         res.status(201).json({
             success: true,
-            data: '게시글이 성공적으로 삭제되었습니다.',
-            message: '게시글이 성공적으로 삭제되었습니다.'
-            
+            data: {
+                boardsDeleted: deletedCount,
+                blocksDeleted: blockDeleteResult.deletedCount || 0
+            },
+            message: '게시글과 관련 블록이 성공적으로 삭제되었습니다.'
         });
-
+        
         return;
+    } catch (err) {
+        return next(err);
     }
-    catch(err)
-    {
-        return next(err)
-    }
-}
+};
 
 
 export const searchBoards = async (req:Request, res : Response , next : NextFunction) : Promise<void> => {

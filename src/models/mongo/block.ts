@@ -4,7 +4,7 @@ import { Schema } from "mongoose";
  * Block 모델 스키마 
  */
 export const BlockSchema = new Schema({
-    _id: String,
+    id: String,
     parentId: String,
     type: {
         type: String,
@@ -16,7 +16,12 @@ export const BlockSchema = new Schema({
         level: Number,
         items: [String],
         url: String,
-        caption: String
+        caption: String,
+        style : {
+            type: String,
+            enum: ['underline','bold','crooked','cancelline','link','basic']
+        },
+        color : String,
     },
     createdAt: {
         type: Date,
@@ -25,21 +30,23 @@ export const BlockSchema = new Schema({
     updatedAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    index : Number,
 }, { timestamps: true });
 
 /**
  * Block 컬렉션 스키마 
  */
 export const BlockCollectionSchema = new Schema({
+    _id: { type: String }, // 여기를 수정
     title: String,
-    blocks: [BlockSchema],
+    // blocks 필드는 실제로 사용하지 않음
     createdAt: {
-        type: Date,
-        default: Date.now
+      type: Date,
+      default: Date.now
     },
     updatedAt: {
-        type: Date,
-        default: Date.now
+      type: Date,
+      default: Date.now
     }
-}, { timestamps: true });
+  }, { timestamps: true });
