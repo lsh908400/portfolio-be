@@ -45,6 +45,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
 // API 라우트
 app.use(`${api}${path_config.code}`, codeRoutes);
@@ -52,6 +53,7 @@ app.use(`${api}${path_config.user}`, profileRoutes);
 app.use(`${api}${path_config.category}`, categoryRoutes);
 app.use(`${api}${path_config.board}`, boardRoutes);
 app.use(`${api}${path_config.blocks}`, blockRoutes);
+
 
 
 app.use(errorHandler);

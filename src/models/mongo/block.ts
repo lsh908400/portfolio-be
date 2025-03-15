@@ -8,7 +8,7 @@ export const BlockSchema = new Schema({
     parentId: String,
     type: {
         type: String,
-        enum: ['paragraph', 'header', 'list', 'image', 'title'],
+        enum: ['paragraph', 'header', 'list', 'img', 'title' , 'code'],
         required: true
     },
     data: {
@@ -22,6 +22,9 @@ export const BlockSchema = new Schema({
             enum: ['underline','bold','crooked','cancelline','link','basic']
         },
         color : String,
+        imageWidth : Number,
+        imageHeight : Number,
+        language : String,
     },
     createdAt: {
         type: Date,
