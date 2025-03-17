@@ -17,7 +17,6 @@ import blockRoutes from './routes/blockRoutes';
 import treeRoutes from './routes/treeRoutes';
 import projectRoutes from './routes/projectRoutes';
 import timelineRoutes from './routes/timelineRoutes';
-// import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 import { initializeDatabases } from './config/database';
