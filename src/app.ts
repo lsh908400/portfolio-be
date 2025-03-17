@@ -72,12 +72,11 @@ app.use(`${api}${path_config.timeline}`, timelineRoutes);
 
 
 app.use(errorHandler);
-// app.use('/api', apiLimiter);
 const startServer = (): void => {
     try 
     {
         app.listen(config.port, () => {
-            logger.info(`서버가 포트 ${config.port}에서 시작되었습니다. (환경: ${config.env})`);
+            logger.info(`서버가 포트 ${config.port}에서 시작되었습니다. (환경: ${config.env}) CORS Origin : ${config.corsOrigin}`);
         });
     } 
     catch (error) 
