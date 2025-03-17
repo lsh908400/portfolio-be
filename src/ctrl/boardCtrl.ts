@@ -77,6 +77,49 @@ export const postBoard = async (req : Request, res : Response, next : NextFuncti
         return next(err)
     }
 }
+
+export const patchBoardTitle = async (req: Request, res: Response, next: NextFunction) : Promise<void> => {
+    try
+    {
+        const {id, title} = req.body;
+
+        if (!id || !title) {
+            res.status(400).json({
+                success: false,
+                message: '제목 필드는 필수입니다.'
+            });
+            return;
+        }
+        
+        const board = await Board.findOne({
+            where : {
+                id : id
+            }
+        })
+
+        if (!board) {
+            res.status(404).json({
+                success: false,
+                message: '해당 게시글을 찾을 수 없습니다.'
+            });
+            return;
+        }
+
+        board.title = title;
+        await board.save();
+
+        res.status(201).json({
+            success : true,
+            message : "제목이 성공적으로 변경되었습니다."
+        })
+    }
+    catch(err)
+    {
+        return next(err);
+    }
+}
+
+
 const BlockModel = mongoose.model('Block', BlockSchema, 'block');
 export const deleteBoards = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

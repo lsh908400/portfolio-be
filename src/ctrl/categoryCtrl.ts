@@ -5,6 +5,7 @@ import logger from '../utils/logger';
 import mongoose from 'mongoose';
 import { BlockSchema } from '../models/mongo/block';
 import Board from '../models/mysql/board';
+import config from '../config/config';
 
 
 export const postCategory = async (req: Request, res: Response, next : NextFunction): Promise<void> => {
@@ -21,7 +22,8 @@ export const postCategory = async (req: Request, res: Response, next : NextFunct
 
         const categoryModel = await Category.create({
             title: category.title,
-            icon: category.icon
+            icon: category.icon,
+            type: 1
         });
 
         logger.info(`새 카테고리 생성: ${categoryModel.title} (ID: ${categoryModel.id})`);
@@ -40,7 +42,11 @@ export const postCategory = async (req: Request, res: Response, next : NextFunct
 export const getCategory = async (req: Request, res: Response, next : NextFunction): Promise<void> => {
 
     try {
+        const {type} = req.params;
         const categories = await Category.findAll({
+            where : {
+                type : type
+            },
             attributes: ['id', 'title', 'icon']
         });
         

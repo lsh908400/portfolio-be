@@ -7,7 +7,7 @@ const categoryPath = {
 const router = Router();
 
 router.post(`${categoryPath.root}`, postCategory)
-router.get(`${categoryPath.root}`, getCategory)
+router.get(`${categoryPath.root}:type`, getCategory)
 router.delete(`${categoryPath.root}:id`, deleteCategory)
 router.put(`${categoryPath.root}`, putCategories)
 

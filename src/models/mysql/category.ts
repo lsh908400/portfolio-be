@@ -14,6 +14,7 @@ export interface CategoryAttributes {
     id?: number;
     title: string;
     icon: string;
+    type: number;
 }
 
 export interface CategoryCreationAttributes extends Optional<CategoryAttributes, 'id'> {}
@@ -22,6 +23,7 @@ class Category extends Model<CategoryAttributes, CategoryCreationAttributes> imp
     public id!: number;
     public title!: string;
     public icon!: string;
+    public type!: number;
 }
 
 Category.init({
@@ -37,6 +39,10 @@ Category.init({
     icon: {
         type: DataTypes.STRING(255),
         allowNull: false,
+    },
+    type: {
+        type: DataTypes.NUMBER,
+        allowNull: true,
     }
 }, {
     sequelize,

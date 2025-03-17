@@ -9,53 +9,85 @@ const backendDir = path.resolve(__dirname, '../../');
 
 // 페이지 이름과 파일 경로 매핑 (업데이트된 구조)
 const pageMapping: Record<string, { 
-  API?: string | Array<{name: string, path: string}>, 
-  Front?: string | Array<{name: string, path: string}>, 
-  Back?: string | Array<{name: string, path: string}> 
+    API?: string | Array<{name: string, path: string}>, 
+    Front?: string | Array<{name: string, path: string}>, 
+    Back?: string | Array<{name: string, path: string}> 
 }> = {
-  'profile': {
-    Front: [
-        {name: 'Profile', path: '/src/pages/Profile.tsx'},
-        {name: 'Introduce', path: '/src/component/pages/Profile/Introduce.tsx'}, 
-    ],
-    Back: '../be/src/ctrl/profileCtrl.ts',
-    API: [
-        {name: 'ProfileFront', path: '/src/services/profileService.ts'},
-        {name: 'ProfileBack', path: '../be/src/routes/profileRoutes.ts'},
-    ]
-  },
-  'index' : {
-    Front: [
-        {name: 'VideoBackground', path: '/src/component/pages/Home/VideoBackground.tsx'},
-        {name: 'Header', path: '/src/component/layout/Header.tsx'},
-    ],
-    Back: '../be/src/ctrl/codeCtrl.ts',
-    API: [
-        {name: 'CodeFront', path:'/src/services/codeService.ts' },
-        {name: 'CodeBack', path:'../be/src/routes/codeRoutes.ts'},
-    ]
-  },
-  'trouble' : {
-    Front: [
-        {name: 'TroublShooting', path: '/src/pages/TroubleShooting.tsx'},
-        {name: 'EditorAside', path:'/src/component/pages/TroubleShooting/EditorAside.tsx'},
-        {name: 'PageIntroduce', path: '/src/component/pages/TroubleShooting/EditorIntro.tsx'},
-        {name: 'Board', path: '/src/component/pages/TroubleShooting/EditorTable.tsx'},
-        {name: 'CommonTable', path: '/src/component/util/CommonTable.tsx'},
-        {name: 'Editor', path: '/src/component/pages/TroubleShooting/Editor.tsx'}
-    ],
-    Back: [
-        {name: 'Category', path:'../be/src/ctrl/categoryCtrl.ts'},
-        {name: 'Board', path:'../be/src/ctrl/boardCtrl.ts'},
-    ],
-    API: [
-        {name: 'CategoryFront', path:'/src/services/categoryService.ts'},
-        {name: 'CategoryBack', path:'../be/src/routes/categoryRoutes.ts'},
-        {name: 'BoardFront', path:'/src/services/boardService.ts'},
-        {name: 'BoardBack', path:'../be/src/routes/boardRoutes.ts'},
-    ]
-  },
-  // 다른 페이지 매핑 추가
+    'profile': {
+        Front: [
+            {name: 'Profile', path: '/src/pages/Profile.tsx'},
+            {name: 'Introduce', path: '/src/component/pages/Profile/Introduce.tsx'},
+            {name: 'VariableInfo', path: '/src/component/util/VariableInfo.tsx'}
+        ],
+        Back: '../be/src/ctrl/profileCtrl.ts',
+        API: [
+            {name: 'ProfileFront', path: '/src/services/profileService.ts'},
+            {name: 'ProfileBack', path: '../be/src/routes/profileRoutes.ts'},
+        ]
+    },
+    'index' : {
+        Front: [
+            {name: 'App', path: '/src/App.tsx'},
+            {name: 'Header', path: '/src/component/layout/Header.tsx'},
+            {name: 'Aside', path: '/src/component/layout/Aside.tsx'},
+            {name: 'Type', path: '/src/types/index.ts'},
+            {name: 'Enum', path: '/src/types/enum.ts'},
+        ],
+        Back: '../be/src/ctrl/codeCtrl.ts',
+        API: [
+            {name: 'CodeFront', path:'/src/services/codeService.ts' },
+            {name: 'CodeBack', path:'../be/src/routes/codeRoutes.ts'},
+        ]
+    },
+    'trouble' : {
+        Front: [
+            {name: 'TroublShooting', path: '/src/pages/TroubleShooting.tsx'},
+            {name: 'EditorAside', path:'/src/component/pages/TroubleShooting/EditorAside.tsx'},
+            {name: 'PageIntroduce', path: '/src/component/pages/TroubleShooting/EditorIntro.tsx'},
+            {name: 'Board', path: '/src/component/pages/TroubleShooting/EditorTable.tsx'},
+            {name: 'CommonTable', path: '/src/component/util/CommonTable.tsx'},
+            {name: 'Editor', path: '/src/component/pages/TroubleShooting/Editor.tsx'},
+            {name: 'EditorHook', path: '/src/hooks/useEditorBlocks.tsx'},
+            {name: 'EditorCodeBlock', path: '/src/component/pages/TroubleShooting/Type/CodeBlockComponent.tsx'},
+            {name: 'EditorOption',path: '/src/component/pages/TroubleShooting/Menu/EditorOption.tsx'},
+            {name: 'EditorMenu',path: '/src/component/pages/TroubleShooting/Menu/EditorTypeMenu.tsx'},
+            {name: 'CommonColorPicker', path: '/src/component/util/CommonColorPicker.tsx'},
+        ],
+        Back: [
+            {name: 'Category', path:'../be/src/ctrl/categoryCtrl.ts'},
+            {name: 'Board', path:'../be/src/ctrl/boardCtrl.ts'},
+            {name: 'Uploads', path:'../be/src/utils/fileHandler.ts'}
+        ],
+        API: [
+            {name: 'CategoryFront', path:'/src/services/categoryService.ts'},
+            {name: 'CategoryBack', path:'../be/src/routes/categoryRoutes.ts'},
+            {name: 'BoardFront', path:'/src/services/boardService.ts'},
+            {name: 'BoardBack', path:'../be/src/routes/boardRoutes.ts'},
+        ]
+    },
+    'study' : {
+        Front : [
+            {name: 'Study', path: '/src/pages/Study.tsx'},
+            {name: 'Aside', path: '/src/component/pages/Study/StudyAside.tsx'},
+            {name: 'Content', path: '/src/component/pages/Study/StudyContent.tsx'}
+        ],
+        Back : [
+            {name: 'Tree', path:'../be/src/ctrl/treeCtrl.ts'},
+        ],
+        API : [
+            {name: 'StudyBack', path:'../be/src/routes/treeRoutes.ts'},
+            {name: 'StudyFront', path:'/src/services/studyIntroService.ts'},
+        ]
+    },
+    'mini' : {
+        Front : [
+            {name: 'Mini-Project', path: '/src/pages/MiniProject.tsx'},
+            {name: 'Weather',path:'/src/component/pages/MiniProject/Front/Weather.tsx'},
+            {name: 'TimeLine',path:'/src/component/pages/MiniProject/Front/TimeLine.tsx'},
+            {name: 'CodeSnipet',path:'/src/component/pages/MiniProject/Front/CodeSnipet.tsx'},
+        ]
+    }
+
 };
 
 // 소스 파일 읽기 함수
