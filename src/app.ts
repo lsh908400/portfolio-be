@@ -17,6 +17,7 @@ import blockRoutes from './routes/blockRoutes';
 import treeRoutes from './routes/treeRoutes';
 import projectRoutes from './routes/projectRoutes';
 import timelineRoutes from './routes/timelineRoutes';
+import snipetRoutes from './routes/snippetRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 import { initializeDatabases } from './config/database';
@@ -32,6 +33,7 @@ const path_config = {
     "tree" : "/tree",
     "project" : "/project",
     "timeline" : "/timeline",
+    "snippet" : "/snippet"
 }
 
 initializeDatabases();
@@ -57,7 +59,7 @@ app.use('/uploads', (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', config.corsOrigin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     next();
-  }, express.static(path.join(__dirname, '/uploads')));
+  }, express.static(path.join(__dirname, config.uploadPath)));
 
 // API 라우트
 app.use(`${api}${path_config.code}`, codeRoutes);
@@ -68,6 +70,7 @@ app.use(`${api}${path_config.blocks}`, blockRoutes);
 app.use(`${api}${path_config.tree}`, treeRoutes);
 app.use(`${api}${path_config.project}`, projectRoutes);
 app.use(`${api}${path_config.timeline}`, timelineRoutes);
+app.use(`${api}${path_config.snippet}`, snipetRoutes);
 
 
 

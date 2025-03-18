@@ -53,11 +53,11 @@ export const putMotivation = async (req: Request, res: Response, next : NextFunc
         const updatedIntroduction = await introductionModel.findOneAndUpdate(
             {}, 
             { 
-              $set: { motivation }
+                $set: { motivation }
             },
             { 
-              new: true,
-              runValidators: true
+                new: true,
+                runValidators: true
             }
         );
 

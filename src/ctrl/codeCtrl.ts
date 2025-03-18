@@ -85,6 +85,16 @@ const pageMapping: Record<string, {
             {name: 'Weather',path:'/src/component/pages/MiniProject/Front/Weather.tsx'},
             {name: 'TimeLine',path:'/src/component/pages/MiniProject/Front/TimeLine.tsx'},
             {name: 'CodeSnipet',path:'/src/component/pages/MiniProject/Front/CodeSnipet.tsx'},
+        ],
+        Back : [
+            {name: 'TimeLine', path:'../be/src/ctrl/timelineCtrl.ts'},
+            {name: 'Snippet', path:'../be/src/ctrl/snippetCtrl.ts'},
+        ],
+        API : [
+            {name: 'TimeLineFront', path: '/src/services/timeLineService.ts'},
+            {name: 'TimeLineBack', path: '../be/src/routes/timelineRoutes.ts'},
+            {name: 'SnippetFront', path: '/src/services/snippetService.ts'},
+            {name: 'SnippetBack', path: '../be/src/routes/snippetRoutes.ts'},
         ]
     }
 

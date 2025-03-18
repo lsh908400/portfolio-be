@@ -65,7 +65,15 @@ export const saveBase64AsFile = async (base64Data: string, parentId: string): Pr
     // 파일 확장자 결정
     const extension = type.split('/')[1];
     const fileName = `${Date.now()}-${parentId}.${extension}`;
-    const filePath = path.join(__dirname, '../uploads', fileName);
+    let filePath;
+
+    if (process.env.NODE_ENV === 'production') {
+      // 프로덕션 환경에서의 경로
+      filePath = process.env.UPLOAD_PATH || '/var/www/uploads';
+    } else {
+      // 개발 환경에서의 경로 (기본값)
+      filePath = path.join(__dirname, '../uploads', fileName);
+    }
     
     // 파일 저장
     await fsPromises.writeFile(filePath, buffer);
