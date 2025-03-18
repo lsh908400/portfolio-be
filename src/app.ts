@@ -59,7 +59,7 @@ app.use('/uploads', (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', config.corsOrigin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     next();
-  }, express.static(path.join(__dirname, config.uploadPath)));
+}, express.static(config.uploadPath));
 
 // API 라우트
 app.use(`${api}${path_config.code}`, codeRoutes);
@@ -79,7 +79,7 @@ const startServer = (): void => {
     try 
     {
         app.listen(config.port, () => {
-            logger.info(`서버가 포트 ${config.port}에서 시작되었습니다. (환경: ${config.env}) CORS Origin : ${config.corsOrigin}`);
+            logger.info(`서버가 포트 ${config.port}에서 시작되었습니다. (환경: ${config.env}) CORS Origin : ${config.corsOrigin} ${path.join(__dirname, config.uploadPath)}` );
         });
     } 
     catch (error) 

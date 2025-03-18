@@ -15,7 +15,7 @@ const config = {
    env: nodeEnv || 'development',
    port: parseInt(process.env.PORT || '5000', 10),
    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-   uploadPath: process.env.UPLOAD_PATH || 'uploads',
+   uploadPath: process.env.UPLOAD_PATH || '/uploads',
    
    // MongoDB 설정
    mongoURI: process.env.MONGO_URI || 'mongodb://portfolio:Alcls154-%2A@15.164.212.30:27017/portfolio?authSource=portfolio',
