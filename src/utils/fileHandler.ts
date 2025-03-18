@@ -65,16 +65,17 @@ export const saveBase64AsFile = async (base64Data: string, parentId: string): Pr
     // 파일 확장자 결정
     const extension = type.split('/')[1];
     const fileName = `${Date.now()}-${parentId}.${extension}`;
-    let filePath;
+    let uploadDir;
 
     if (process.env.NODE_ENV === 'production') {
       // 프로덕션 환경에서의 경로
-      filePath = process.env.UPLOAD_PATH || '/var/www/uploads';
+      uploadDir = process.env.UPLOAD_PATH || '/var/www/uploads';
     } else {
       // 개발 환경에서의 경로 (기본값)
-      filePath = path.join(__dirname, '../uploads', fileName);
+      uploadDir = path.join(__dirname, '../uploads');
     }
     
+    const filePath = path.join(uploadDir, fileName);
     // 파일 저장
     await fsPromises.writeFile(filePath, buffer);
     
@@ -119,7 +120,18 @@ export const deleteImageFile = async (imagePath: string): Promise<void> => {
       return; // 업로드 폴더의 파일만 삭제 처리
     }
     
-    const filePath = path.join(__dirname, '..', imagePath);
+    const fileName = imagePath.replace('/uploads/', '');
+  
+    // 환경에 따른 업로드 디렉토리 설정
+    let uploadDir;
+    if (process.env.NODE_ENV === 'production') {
+      uploadDir = process.env.UPLOAD_PATH || '/var/www/uploads';
+    } else {
+      uploadDir = path.join(__dirname, '../uploads');
+    }
+    
+    // 파일 전체 경로 구성
+    const filePath = path.join(uploadDir, fileName);
     
     try {
       await fsPromises.access(filePath);

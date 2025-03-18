@@ -45,7 +45,6 @@ export const postBlocks = async (
       });
       return;
     }
-    
     // 기존 블록 조회 (이미지 삭제를 위해)
     const existingBlocks = await BlockModel.find({ parentId: id });
     
