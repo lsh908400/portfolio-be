@@ -28,6 +28,7 @@ const pageMapping: Record<string, {
     'index' : {
         Front: [
             {name: 'App', path: '/src/App.tsx'},
+            {name: 'Main', path: '/src/component/pages/Home/VideoBackground.tsx'},
             {name: 'Header', path: '/src/component/layout/Header.tsx'},
             {name: 'Aside', path: '/src/component/layout/Aside.tsx'},
             {name: 'Type', path: '/src/types/index.ts'},
@@ -85,16 +86,31 @@ const pageMapping: Record<string, {
             {name: 'Weather',path:'/src/component/pages/MiniProject/Front/Weather.tsx'},
             {name: 'TimeLine',path:'/src/component/pages/MiniProject/Front/TimeLine.tsx'},
             {name: 'CodeSnipet',path:'/src/component/pages/MiniProject/Front/CodeSnipet.tsx'},
+            {name: 'FileService',path:'/src/component/pages/MiniProject/Front/ManageFile.tsx'},
         ],
         Back : [
             {name: 'TimeLine', path:'../be/src/ctrl/timelineCtrl.ts'},
             {name: 'Snippet', path:'../be/src/ctrl/snippetCtrl.ts'},
+            {name: 'FileHandler',path:'../be/src/utils/fileHandler.ts'},
+            {name: 'FileService',path:'../be/src/ctrl/folderCtrl.ts'},
         ],
         API : [
             {name: 'TimeLineFront', path: '/src/services/timeLineService.ts'},
             {name: 'TimeLineBack', path: '../be/src/routes/timelineRoutes.ts'},
             {name: 'SnippetFront', path: '/src/services/snippetService.ts'},
             {name: 'SnippetBack', path: '../be/src/routes/snippetRoutes.ts'},
+            {name: 'FolderFront',path:'/src/services/folderService.ts'},
+            {name: 'FolderBack', path:'../be/src/routes/folderRoutes.ts'},
+        ]
+    },
+    'prevproject' : {
+        Front : [
+            {name: 'Prev-Project', path: '/src/pages/PrevProject.tsx'}
+        ]
+    },
+    'job' : {
+        Front : [
+            {name: 'Job-Expreience', path: '/src/pages/Job.tsx'}
         ]
     }
 

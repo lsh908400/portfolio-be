@@ -21,6 +21,7 @@ npm-debug.log*
 *.swo
 
 src/uploads/
+src/folders/
 
 # OS
 .DS_Store

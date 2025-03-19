@@ -18,6 +18,7 @@ import treeRoutes from './routes/treeRoutes';
 import projectRoutes from './routes/projectRoutes';
 import timelineRoutes from './routes/timelineRoutes';
 import snipetRoutes from './routes/snippetRoutes';
+import folderRoutes from './routes/folderRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 import { initializeDatabases } from './config/database';
@@ -33,7 +34,8 @@ const path_config = {
     "tree" : "/tree",
     "project" : "/project",
     "timeline" : "/timeline",
-    "snippet" : "/snippet"
+    "snippet" : "/snippet",
+    "folder" : "/folder"
 }
 
 initializeDatabases();
@@ -71,6 +73,7 @@ app.use(`${api}${path_config.tree}`, treeRoutes);
 app.use(`${api}${path_config.project}`, projectRoutes);
 app.use(`${api}${path_config.timeline}`, timelineRoutes);
 app.use(`${api}${path_config.snippet}`, snipetRoutes);
+app.use(`${api}${path_config.folder}`, folderRoutes);
 
 
 
