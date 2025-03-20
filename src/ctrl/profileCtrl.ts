@@ -1,7 +1,8 @@
 import { Request, Response , NextFunction} from 'express';
 import mongoose, { Schema } from 'mongoose';
 import { IntroductionSchema, UserSchema } from '../models/mongo/user';
-import { createBadRequestError, createNotFoundError } from '../constants/errorMessages';
+import { createBadRequestError, createNotFoundError, updateError } from '../constants/errorMessages';
+import { successMessage } from '../constants/successMessage';
 
 
 
@@ -14,10 +15,10 @@ export const getUser = async (req: Request, res: Response, next : NextFunction):
     try {
         let user = await userModel.findOne({});
         if (!user) {
-            return next(createNotFoundError('user', '등록된 사용자 정보가 필요합니다.'));
+            return next(createBadRequestError('user', '등록된 사용자 정보가 필요합니다.'));
         }
 
-        res.json({
+        res.status(200).json({
             success: true,
             data: user
         });
@@ -34,7 +35,7 @@ export const getIntroduction = async (req: Request, res: Response, next : NextFu
             return next(createNotFoundError('introduction'));
         }
         
-        res.json({
+        res.status(200).json({
             success: true,
             data: introduction
         });
@@ -48,7 +49,7 @@ export const putMotivation = async (req: Request, res: Response, next : NextFunc
     try {
         const { motivation } = req.body;
         if (!motivation) {
-            return next(createNotFoundError('introduction'));
+            return next(createBadRequestError('introduction'));
         }
         const updatedIntroduction = await introductionModel.findOneAndUpdate(
             {}, 
@@ -65,9 +66,9 @@ export const putMotivation = async (req: Request, res: Response, next : NextFunc
             return next(createNotFoundError('introduction'));
         }
         
-        res.json({
+        res.status(200).json({
             success: true,
-            data: '자기소개서 지원동기가 성공적으로 업데이트되었습니다.'
+            message: successMessage.profile.motivation
         });
     } catch (error) {
         return next(error)
@@ -79,7 +80,7 @@ export const putGrowth = async (req: Request, res: Response, next : NextFunction
     try {
         const { growth } = req.body;
         if (!growth) {
-            return next(createNotFoundError('introduction'));
+            return next(createBadRequestError('introduction'));
         }
         const updatedIntroduction = await introductionModel.findOneAndUpdate(
             {}, 
@@ -96,9 +97,9 @@ export const putGrowth = async (req: Request, res: Response, next : NextFunction
             return next(createNotFoundError('introduction'));
         }
         
-        res.json({
+        res.status(200).json({
             success: true,
-            data: '자기소개서 지원동기가 성공적으로 업데이트되었습니다.'
+            message: successMessage.profile.growth
         });
     } catch (error) {
         return next(error)
@@ -110,7 +111,7 @@ export const putAdventage = async (req: Request, res: Response, next : NextFunct
     try {
         const { adventage } = req.body;
         if (!adventage) {
-            return next(createNotFoundError('introduction'));
+            return next(createBadRequestError('introduction'));
         }
         const updatedIntroduction = await introductionModel.findOneAndUpdate(
             {}, 
@@ -127,9 +128,9 @@ export const putAdventage = async (req: Request, res: Response, next : NextFunct
             return next(createNotFoundError('introduction'));
         }
         
-        res.json({
+        res.status(200).json({
             success: true,
-            data: '자기소개서 지원동기가 성공적으로 업데이트되었습니다.'
+            message: successMessage.profile.adventage
         });
     } catch (error) {
         return next(error)
@@ -141,7 +142,7 @@ export const putGoals = async (req: Request, res: Response, next : NextFunction)
     try {
         const { goals } = req.body;
         if (!goals) {
-            return next(createNotFoundError('introduction'));
+            return next(createBadRequestError('introduction'));
         }
         const updatedIntroduction = await introductionModel.findOneAndUpdate(
             {}, 
@@ -158,9 +159,9 @@ export const putGoals = async (req: Request, res: Response, next : NextFunction)
             return next(createNotFoundError('introduction'));
         }
         
-        res.json({
+        res.status(200).json({
             success: true,
-            data: '자기소개서 지원동기가 성공적으로 업데이트되었습니다.'
+            message: successMessage.profile.goals
         });
     } catch (error) {
         return next(error)

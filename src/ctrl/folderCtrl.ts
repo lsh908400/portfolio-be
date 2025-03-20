@@ -4,17 +4,15 @@ import * as fs from 'fs';
 import Folder from "../models/mysql/folder";
 import { randomUUID } from "crypto";
 import path from 'path';
+import { createBadRequestError, createNotFoundError, createServerError } from "../constants/errorMessages";
+import { successMessage } from "../constants/successMessage";
 
 export const getFolder = async (req: Request, res: Response, next : NextFunction): Promise<void> => {
     try
     {
         const {id , dir} = req.query;
         if(!id || !dir) {
-            res.status(400).json({
-                success : false,
-                message : '유저 아이디를 찾을 수 없습니다.'
-            })
-            return;
+            return next(createBadRequestError('folder'));
         }
 
 
@@ -68,9 +66,9 @@ export const getFolder = async (req: Request, res: Response, next : NextFunction
                     
                     itemInfo.maxSizeBytes = folderConfig.maxSizeBytes;
                     itemInfo.maxSizeFormatted = formatFileSize(folderConfig.maxSizeBytes);
-                    } catch (error) {
+                } catch (error) {
                     console.error(`설정 파일 읽기 오류: ${item.name}`, error);
-                    }
+                }
                 }
             }
             
@@ -80,7 +78,7 @@ export const getFolder = async (req: Request, res: Response, next : NextFunction
         res.status(200).json({
             success : true,
             data : folderContents,
-            message : '폴더 데이터를 성공적으로 로드하였습니다.'
+            message : successMessage.folder.get
         })
     }
     catch(err)
@@ -95,14 +93,9 @@ export const postFolder = async (req: Request, res: Response, next : NextFunctio
     try
     {
         const postFolderForm = req.body;
-        console.log(postFolderForm)
         if(!postFolderForm)
         {
-            res.status(400).json({
-                success : false,
-                message : '입렵 폼 에러'
-            })
-            return;
+            return next(createBadRequestError('folder'))
         }
         let id;
 
@@ -118,11 +111,17 @@ export const postFolder = async (req: Request, res: Response, next : NextFunctio
 
         if(!folder)
         {
-            res.status(400).json({
-                success : false,
-                message : '파일경로 에러'
-            })
-            return;
+            return next(createNotFoundError('folder'))
+        }
+
+        if (!postFolderForm.maxSizeBytes || 
+            typeof postFolderForm.maxSizeBytes !== 'number' || 
+            postFolderForm.maxSizeBytes <= 0) {
+            postFolderForm.maxSizeBytes = folder.volume; 
+        }
+
+        if (postFolderForm.maxSizeBytes > folder.volume) {
+            postFolderForm.maxSizeBytes = folder.volume;
         }
 
         const options = {
@@ -130,12 +129,14 @@ export const postFolder = async (req: Request, res: Response, next : NextFunctio
             maxSizeBytes : postFolderForm.maxSizeBytes
         }
 
+        
+
         const newPath = path.join(postFolderForm.path, postFolderForm.name)
         const {folderPath,config} = getUserDirectoryPath(newPath.toString(),options);
 
         res.status(200).json({
             success : true,
-            message : '폴더를 성공적으로 등록하였습니다.'
+            message : successMessage.folder.post
         })
     }
     catch(err)
@@ -151,29 +152,20 @@ export const deleteFolder = async (req: Request, res: Response, next : NextFunct
         const {name , id} = req.body;
         if(!name || !id)
         {
-            res.status(400).json({
-                success : false,
-                message : '삭제 정보 에러'
-            })
-            return;
+            return next(createBadRequestError('folder'))
         }
-        console.log(name,id)
 
         const newPath = path.join(id , name)
         
         const {success, message} = deleteUserDirectory(newPath);
         if(!success)
         {
-            res.status(500).json({
-                success : false,
-                message : '폴더 삭제 중 서버에러'
-            })
-            return;
+            return next(createServerError('folder'));
         }
 
         res.status(200).json({
             success : true,
-            message : '폴더를 성공적으로 삭제하였습니다.'
+            message : successMessage.folder.delete
         })
     }
     catch(err)

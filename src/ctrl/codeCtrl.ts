@@ -1,13 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
 import fs from 'fs';
 import path from 'path';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
+import { createBadRequestError } from '../constants/errorMessages';
 
-// 프로젝트 루트 디렉토리 (프론트엔드 코드가 있는 위치)
 const frontendDir = path.resolve(__dirname, '../../../fe');
 const backendDir = path.resolve(__dirname, '../../');
 
-// 페이지 이름과 파일 경로 매핑 (업데이트된 구조)
 const pageMapping: Record<string, { 
     API?: string | Array<{name: string, path: string}>, 
     Front?: string | Array<{name: string, path: string}>, 
@@ -57,7 +56,8 @@ const pageMapping: Record<string, {
         Back: [
             {name: 'Category', path:'../be/src/ctrl/categoryCtrl.ts'},
             {name: 'Board', path:'../be/src/ctrl/boardCtrl.ts'},
-            {name: 'Uploads', path:'../be/src/utils/fileHandler.ts'}
+            {name: 'Block', path:'../be/src/ctrl/blockCtrl.ts'},
+            {name: 'Uploads', path:'../be/src/utils/fileHandler.ts'},
         ],
         API: [
             {name: 'CategoryFront', path:'/src/services/categoryService.ts'},
@@ -159,15 +159,11 @@ const CodeMapSchema = new Schema({
 const CodeMapModel = mongoose.model('CodeMap', CodeMapSchema, 'codemap');
 
 // 페이지 소스 코드 가져오기 API (기존 함수에 MongoDB 저장 기능 추가)
-export const putPageCode = async (req: Request, res: Response): Promise<void> => {
+export const putPageCode = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
     const { pageName } = req.params;
     
     if (!pageMapping[pageName]) {
-        res.status(404).json({
-            success: false,
-            message: `${pageName} 페이지에 대한 매핑 정보가 없습니다.`
-        });
-        return;
+        return next(createBadRequestError('code'))
     }
     
     const sourceCode = {
@@ -177,14 +173,11 @@ export const putPageCode = async (req: Request, res: Response): Promise<void> =>
     };
 
     try {
-        // MongoDB에서 코드맵 가져오기
         let codeMap = await CodeMapModel.findOne({ _id: 'main' });
         if (!codeMap) {
-            // 없으면 새로 생성
             codeMap = new CodeMapModel({ _id: 'main', data: {} });
         }
 
-        // 페이지 코드 저장
         codeMap.data[pageName] = sourceCode;
         codeMap.updatedAt = new Date();
         
@@ -199,49 +192,34 @@ export const putPageCode = async (req: Request, res: Response): Promise<void> =>
             { upsert: true }
         );
 
-        res.json({
+        res.status(200).json({
             success: true,
             data: sourceCode
         });
     } catch (error) {
         console.error('MongoDB 저장 오류:', error);
-        res.json({
-            success: true, // 파일 내용은 성공적으로 가져왔으므로 success: true 유지
-            data: sourceCode,
-            message: 'MongoDB에 저장하는 데 실패했지만 파일 내용은 성공적으로 가져왔습니다.'
-        });
+        return next(error);
     }
 };
 
-// 특정 페이지 코드 데이터 가져오기
-export const getPageCode = async (req: Request, res: Response): Promise<void> => {
+export const getPageCode = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const { pageName } = req.params;
         
-        // MongoDB에서 데이터 가져오기
         const codeMapDoc = await CodeMapModel.findOne({ _id: 'main' });
         
-        // 데이터가 없으면 빈 객체 사용
         const codeMap = codeMapDoc?.data || {};
         
         if (!codeMap[pageName]) {
-            res.status(404).json({
-                success: false,
-                message: `${pageName} 페이지의 코드 데이터를 찾을 수 없습니다.`,
-            });
-            return;
+            return next(createBadRequestError('code'))
         }
         
-        res.json({
+        res.status(200).json({
             success: true,
             data: codeMap[pageName],
         });
     } catch (error) {
         console.error('MongoDB 읽기 오류:', error);
-        res.status(500).json({
-            success: false,
-            message: '코드 데이터를 가져오는 중 오류가 발생했습니다.',
-            error: (error as Error).message,
-        });
+        return next(error)
     }
 };

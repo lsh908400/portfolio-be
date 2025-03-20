@@ -1,6 +1,8 @@
 import { Request, Response , NextFunction} from 'express';
 import Tree from '../models/mysql/tree';
 import Purpose from '../models/mysql/purpose';
+import { createBadRequestError } from '../constants/errorMessages';
+import { successMessage } from '../constants/successMessage';
 
 
 
@@ -8,8 +10,9 @@ export const getTrees = async (req: Request, res: Response, next : NextFunction)
     try
     {
         const {type} = req.params;
-        console.log("tree",type)
-        if(!type) return;
+        if(!type) {
+            return next(createBadRequestError('tree'))
+        };
         const trees = await Tree.findAll({
             where: {
                 type : [type]
@@ -17,9 +20,10 @@ export const getTrees = async (req: Request, res: Response, next : NextFunction)
         });
 
         if (!(trees.length > 0)) {
-            res.status(204).json({
+            res.status(200).json({
                 success: false,
-                message: '등록된 Tree가 없습니다.'
+                data : [],
+                message: successMessage.tree.noTree
             })
             return;
         }
@@ -27,12 +31,13 @@ export const getTrees = async (req: Request, res: Response, next : NextFunction)
         res.status(200).json({
             success: true,
             data: trees,
-            message: 'Tree가 성공적으로 로드되었습니다.'
+            message: successMessage.tree.get
         });
         return;
     }
     catch(err)
     {
+        console.error(err);
         return next(err);
     }
 }
@@ -41,8 +46,9 @@ export const getPurpose = async (req: Request, res: Response, next : NextFunctio
     try
     {
         const {type} = req.params;
-        console.log("purpose",type)
-        if(!type) return;
+        if(!type) {
+            return next(createBadRequestError('tree'))
+        };
         const purpose = await Purpose.findAll({
             where: {
                 type : [type]
@@ -50,9 +56,10 @@ export const getPurpose = async (req: Request, res: Response, next : NextFunctio
         });
 
         if (!(purpose.length > 0)) {
-            res.status(204).json({
+            res.status(200).json({
                 success: false,
-                message: '등록된 목표가 없습니다.'
+                data : [],
+                message: successMessage.purpose.noPurpose
             })
             return;
         }
@@ -60,7 +67,7 @@ export const getPurpose = async (req: Request, res: Response, next : NextFunctio
         res.status(200).json({
             success: true,
             data: purpose,
-            message: '목표가 성공적으로 로드되었습니다.'
+            message: successMessage.purpose.get
         });
         return;
     }
