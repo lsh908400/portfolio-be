@@ -2,7 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 import fs from 'fs';
 import path from 'path';
 import { NextFunction, Request, Response } from 'express';
-import { createBadRequestError } from '../constants/errorMessages';
+import { createBadRequestError, createUnauthorizedError } from '../constants/errorMessages';
 
 const frontendDir = path.resolve(__dirname, '../../../fe');
 const backendDir = path.resolve(__dirname, '../../');
@@ -161,6 +161,11 @@ const CodeMapModel = mongoose.model('CodeMap', CodeMapSchema, 'codemap');
 // 페이지 소스 코드 가져오기 API (기존 함수에 MongoDB 저장 기능 추가)
 export const putPageCode = async (req: Request, res: Response, next:NextFunction): Promise<void> => {
     const { pageName } = req.params;
+
+    if (process.env.NODE_ENV === 'production') 
+    {
+        return next(createUnauthorizedError('code'))
+    }
     
     if (!pageMapping[pageName]) {
         return next(createBadRequestError('code'))
