@@ -19,6 +19,7 @@ import projectRoutes from './routes/projectRoutes';
 import timelineRoutes from './routes/timelineRoutes';
 import snipetRoutes from './routes/snippetRoutes';
 import folderRoutes from './routes/folderRoutes';
+import versionRoutes from './routes/versionRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 import { initializeDatabases } from './config/database';
@@ -35,7 +36,8 @@ const path_config = {
     "project" : "/project",
     "timeline" : "/timeline",
     "snippet" : "/snippet",
-    "folder" : "/folder"
+    "folder" : "/folder",
+    "version" : "/version",
 }
 
 initializeDatabases();
@@ -62,6 +64,11 @@ app.use('/uploads', (req, res, next) => {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     next();
 }, express.static(config.uploadPath));
+app.use('/folders', (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', config.corsOrigin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    next();
+}, express.static(config.basePath));
 
 // API 라우트
 app.use(`${api}${path_config.code}`, codeRoutes);
@@ -74,6 +81,7 @@ app.use(`${api}${path_config.project}`, projectRoutes);
 app.use(`${api}${path_config.timeline}`, timelineRoutes);
 app.use(`${api}${path_config.snippet}`, snipetRoutes);
 app.use(`${api}${path_config.folder}`, folderRoutes);
+app.use(`${api}${path_config.version}`, versionRoutes);
 
 
 

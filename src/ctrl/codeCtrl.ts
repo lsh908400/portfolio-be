@@ -108,9 +108,16 @@ const pageMapping: Record<string, {
             {name: 'Prev-Project', path: '/src/pages/PrevProject.tsx'}
         ]
     },
-    'job' : {
+    'version' : {
         Front : [
-            {name: 'Job-Expreience', path: '/src/pages/Job.tsx'}
+            {name: 'version-history', path: '/src/pages/Version.tsx' }
+        ],
+        Back : [
+            {name: 'Version', path: '../be/src/ctrl/versionCtrl.ts'}
+        ],
+        API : [
+            {name: 'VersionFront', path: '/src/services/versionService.ts'},
+            {name: 'VersionBack', path: '../be/src/routes/versionRoutes.ts'}
         ]
     }
 

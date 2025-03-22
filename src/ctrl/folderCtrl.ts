@@ -177,15 +177,11 @@ export const deleteFolder = async (req: Request, res: Response, next : NextFunct
 
 export const uploadFolder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        // multer에 의해 처리된 파일 정보는 req.files에 배열로 저장됨
         const files = req.files as Express.Multer.File[];
         
         const folderName = req.body.folderName;
-        const filePath = req.body.filePath;
-        
         
         if (files && files.length > 0) {
-            // 성공 응답
             res.status(200).json({
                 success: true,
                 message: `${folderName} 폴더의 ${files.length}개 파일이 성공적으로 업로드되었습니다.`,
@@ -193,7 +189,6 @@ export const uploadFolder = async (req: Request, res: Response, next: NextFuncti
                 fileCount: files.length
             });
         } else {
-            // 파일이 없는 경우
             res.status(400).json({
                 success: false,
                 message: successMessage.folder.noFile
