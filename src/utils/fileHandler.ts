@@ -151,7 +151,7 @@ export const getUserDirectoryPath = (
     password?: string;
     maxSizeBytes?: number;
   }
-): { folderPath: string; config: FolderConfig } => {
+): { folderPath: string; config: FolderConfig} => {
   let userPath = '';
   if (process.env.NODE_ENV === 'production') {
     userPath = process.env.BASE_PATH || '/var/www/folders';
@@ -206,8 +206,9 @@ export const getUserDirectoryPath = (
     // 새 설정 저장
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
   }
+
   
-  return { folderPath, config };
+  return { folderPath, config};
 };
 
 function hashPassword(password: string): string {
@@ -373,4 +374,35 @@ export const deleteItemInUserDirectory = (userId: string, itemPath: string): { s
       message: `항목 삭제 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`
     };
   }
+};
+
+export const calculateFolderSize = (folderPath: string): number => {
+  let totalSize = 0;
+  if(folderPath.includes('.folder-config.json'))
+  {
+    totalSize += 0;
+  }
+  else 
+  {
+    // 폴더 내 모든 파일 및 디렉토리 읽기
+    const items = fs.readdirSync(folderPath);
+      
+    for (const item of items) {
+      // 숨겨진 설정 파일은 제외
+      if (item === '.folder-config.json') {
+        continue;
+      }
+      
+      const itemPath = path.join(folderPath, item);
+      const stats = fs.statSync(itemPath);
+      
+      if (stats.isFile()) {
+        totalSize += stats.size;
+      } else if (stats.isDirectory()) {
+        totalSize += calculateFolderSize(itemPath);
+      }
+    }
+  }
+  
+  return totalSize;
 };

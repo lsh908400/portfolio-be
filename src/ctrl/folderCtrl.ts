@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { deleteUserDirectory, formatFileSize, getUserDirectoryPath } from "../utils/fileHandler";
+import { calculateFolderSize, deleteUserDirectory, formatFileSize, getFolderSize, getUserDirectoryPath } from "../utils/fileHandler";
 import * as fs from 'fs';
 import Folder from "../models/mysql/folder";
 import { randomUUID } from "crypto";
@@ -14,7 +14,6 @@ export const getFolder = async (req: Request, res: Response, next : NextFunction
         if(!id || !dir) {
             return next(createBadRequestError('folder'));
         }
-
 
         const folder = await Folder.findOne({
             where : {id : dir.toString()}
@@ -42,18 +41,27 @@ export const getFolder = async (req: Request, res: Response, next : NextFunction
             }
         }
 
-        const {folderPath,config} = getUserDirectoryPath(id.toString(),options);
+        const {folderPath} = getUserDirectoryPath(id.toString(),options);
 
         const items = await fs.promises.readdir(folderPath, { withFileTypes: true });
 
         const folderContentsPromises = await items.map(async (item) => {
             const itemPath = path.join(folderPath, item.name);
+            let currentSizeForm = '0MB';
+            if(item.isDirectory())
+            {
+                const newPath = path.join(item.parentPath,item.name)
+                const currentSize = calculateFolderSize(newPath);
+                currentSizeForm = formatFileSize(currentSize)
+            }
+            
             const itemInfo = {
                 name: item.name,
                 isDirectory: item.isDirectory(),
                 path: path.join(id.toString(), item.name),
                 maxSizeBytes: 0,
-                maxSizeFormatted: ''
+                maxSizeFormatted: '',
+                currentSizeFormatted : currentSizeForm,
             };
             
             if (item.isDirectory()) {
@@ -180,7 +188,6 @@ export const uploadFolder = async (req: Request, res: Response, next: NextFuncti
         const files = req.files as Express.Multer.File[];
         
         const folderName = req.body.folderName;
-        
         if (files && files.length > 0) {
             res.status(200).json({
                 success: true,
