@@ -1,0 +1,1 @@
+export const MAX_DOWNLOAD_SIZE : number = 4194304000;

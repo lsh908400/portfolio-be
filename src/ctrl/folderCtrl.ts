@@ -1,11 +1,14 @@
 import { NextFunction, Request, Response } from "express";
-import { calculateFolderSize, deleteUserDirectory, formatFileSize, getFolderSize, getUserDirectoryPath } from "../utils/fileHandler";
+import { calculateFolderSize, deleteUserDirectory, determineContentType, downloadFile, downloadFolder, formatFileSize, getFilePath, getFolderSize, getUserDirectoryPath, sanitizePath } from "../utils/fileHandler";
 import * as fs from 'fs';
 import Folder from "../models/mysql/folder";
 import { randomUUID } from "crypto";
 import path from 'path';
-import { createBadRequestError, createNotFoundError, createServerError } from "../constants/errorMessages";
+import { createBadRequestError, createNotFoundError, createPayloadTooLargeError, createServerError } from "../constants/errorMessages";
 import { successMessage } from "../constants/successMessage";
+import archiver from "archiver";
+import logger from "../utils/logger";
+import { MAX_DOWNLOAD_SIZE } from "../constants";
 
 export const getFolder = async (req: Request, res: Response, next : NextFunction): Promise<void> => {
     try
@@ -206,3 +209,57 @@ export const uploadFolder = async (req: Request, res: Response, next: NextFuncti
         next(err);
     }
 };
+
+export const downloadFolderOrFile = async (req : Request, res : Response, next : NextFunction): Promise<void> => {
+    try
+    {
+        const {filePath, fileName} = req.query;
+
+        if (!filePath || typeof filePath !== 'string' || !fileName || typeof fileName !== 'string') {
+            return next(createBadRequestError('folder'))
+        }
+
+        const sanitizedFilePath = sanitizePath(filePath);
+        const sanitizedFileName = sanitizePath(fileName);
+
+        const downloadId = randomUUID();
+
+        const itemFullPath = getFilePath(sanitizedFilePath, sanitizedFileName);
+
+        res.setHeader('Access-Control-Expose-Headers', 'X-Download-ID');
+        res.setHeader('X-Download-ID', downloadId);
+
+        try {
+            await fs.promises.access(itemFullPath, fs.constants.F_OK);
+        } catch (error) {
+            return next(createNotFoundError('folder'));
+        }
+
+        const stats = await fs.promises.stat(itemFullPath);
+
+        logger.info(`Download request for ${stats.isFile() ? 'file' : 'folder'}: ${sanitizedFilePath}/${sanitizedFileName}`);
+
+        if (stats.size > MAX_DOWNLOAD_SIZE && stats.isFile()) {
+            return next(createPayloadTooLargeError('folder'));
+        }
+
+        res.setHeader('Cache-Control', 'no-cache');
+        
+        
+        if (stats.isFile()) {
+            const contentType = determineContentType(itemFullPath);
+            await downloadFile(itemFullPath, sanitizedFileName, contentType, downloadId, res, next);
+        } else if (stats.isDirectory()) {
+            downloadFolder(itemFullPath,fileName.toString(),downloadId,res,next);
+        } else {
+            return next(createBadRequestError('folder'));
+        }
+
+        logger.info(`Download completed for: ${sanitizedFilePath}/${sanitizedFileName}`);
+    }
+    catch(err)
+    {
+        console.error(err)
+        next(err)
+    }
+}

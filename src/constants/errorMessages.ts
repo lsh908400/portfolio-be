@@ -249,6 +249,10 @@ export const createServerError = (domain: ErrorDomain, customMessage?: string) =
   return new AppError(domain, 'server error', 500, customMessage);
 }
 
+export const createPayloadTooLargeError = (domain : ErrorDomain, customMessage? : string) => {
+  return new AppError(domain, 'payload too large', 413, customMessage)
+}
+
 export default {
   getErrorMessage,
   AppError,

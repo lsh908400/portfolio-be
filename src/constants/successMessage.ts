@@ -27,7 +27,7 @@ export const successMessage = {
     folder : {
         get : '폴더 데이터를 성공적으로 로드하였습니다.',
         post : '폴더를 성공적으로 등록하였습니다.',
-        delete : '폴더를 성공적으로 삭제하였습니다.',
+        delete : '성공적으로 삭제하였습니다.',
         noFile : "업로드된 파일이 없습니다.",
     },
     tree : {

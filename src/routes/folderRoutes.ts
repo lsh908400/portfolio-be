@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { deleteFolder, getFolder, postFolder, uploadFolder } from '../ctrl/folderCtrl';
+import { deleteFolder, downloadFolderOrFile, getFolder, postFolder, uploadFolder } from '../ctrl/folderCtrl';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -15,7 +15,8 @@ const router = Router();
 
 const folderConfig = {
     "root" : "/",
-    "upload" : "/upload"
+    "upload" : "/upload",
+    "download" : "/download",
 }
 
 const checkStorage = (req: Request, res: Response, next: NextFunction): void => {
@@ -93,8 +94,7 @@ const upload = multer({
 router.get('', getFolder);
 router.post('', postFolder);
 router.delete('', deleteFolder);
-
-// 미들웨어 체인에서 용량 체크를 먼저 실행하고, 그 다음에 multer 업로드, 마지막으로 uploadFolder 핸들러
 router.post(`${folderConfig.upload}`, checkStorage, upload.array('files'), uploadFolder);
+router.get(`${folderConfig.download}`,downloadFolderOrFile);
 
 export default router;

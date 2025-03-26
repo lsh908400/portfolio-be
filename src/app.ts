@@ -24,6 +24,7 @@ import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 import { initializeDatabases } from './config/database';
 import { syncCategory } from './models/mysql/category';
+import { Server, Server as SocketServer } from 'socket.io';
 
 const api = '/api'
 const path_config = {
@@ -44,7 +45,6 @@ initializeDatabases();
 syncCategory();
 
 const app = express();
-
 
 app.use(morgan(config.env === 'development' ? 'dev' : 'combined'));
 app.use(helmet({
@@ -86,11 +86,84 @@ app.use(`${api}${path_config.version}`, versionRoutes);
 
 
 app.use(errorHandler);
+
+let server : any;
+let io: SocketServer;
+
+const downloadStates = new Map();
+const downloadHistory = new Map();
+
 const startServer = (): void => {
     try 
     {
-        app.listen(config.port, () => {
+        server = app.listen(config.port, () => {
             logger.info(`서버가 포트 ${config.port}에서 시작되었습니다. (환경: ${config.env}) CORS Origin : ${config.corsOrigin} ${path.join(__dirname, config.uploadPath)}` );
+        });
+
+        io = new Server(server, {
+            cors: {
+                origin: config.corsOrigin,
+                methods: ['GET', 'POST'],
+                credentials: true
+            }
+        });
+
+        io.on('connection', (socket) => {
+            logger.info('Client connected:', socket.id);
+            
+            // 클라이언트가 다운로드 세션 시작을 요청
+            socket.on('download:start', (sessionId) => {
+                // 클라이언트를 특정 세션 룸에 조인
+                socket.join(`download:${sessionId}`);
+                logger.info(`Client ${socket.id} joined download session ${sessionId}`);
+            });
+
+            socket.on('download:request-status', (downloadId) => {
+                logger.info(`클라이언트가 다운로드 상태 요청: ${downloadId}`);
+                
+                if (downloadStates.has(downloadId)) {
+                  const state = downloadStates.get(downloadId);
+                  
+                  // 현재 상태 전송
+                  socket.emit('download:status', state);
+                  logger.info(`다운로드 상태 전송: ${downloadId}, 상태: ${state.status}`);
+                  
+                  // 다운로드가 이미 완료된 경우 히스토리 재생
+                  if (state.isCompleted && downloadHistory.has(downloadId)) {
+                    const events = downloadHistory.get(downloadId);
+                    logger.info(`완료된 다운로드 히스토리 재생: ${downloadId}, 이벤트 수: ${events.length}`);
+                    
+                    // 중요 이벤트만 선택적으로 재생 (처음, 중간 진행, 마지막)
+                    const keyEvents = [
+                      events.find((e:any) => e.eventName === 'download:start'),
+                      ...events.filter((e:any) => e.eventName === 'download:progress' && [25, 50, 75].includes(e.data.progress)),
+                      events.find((e:any) => ['download:complete', 'download:error', 'download:canceled'].includes(e.eventName))
+                    ].filter(Boolean);
+                    
+                    // 이벤트 재생 (지연을 두고 순차적으로)
+                    let delay = 0;
+                    keyEvents.forEach(event => {
+                      setTimeout(() => {
+                        socket.emit(event.eventName, {
+                          ...event.data,
+                          isReplay: true
+                        });
+                      }, delay);
+                      delay += 200; // 각 이벤트 간 200ms 지연
+                    });
+                  }
+                } else {
+                  socket.emit('download:status', {
+                    status: 'unknown',
+                    message: '다운로드 정보를 찾을 수 없습니다',
+                    downloadId
+                  });
+                }
+            });
+            
+            socket.on('disconnect', () => {
+                logger.info('Client disconnected:', socket.id);
+            });
         });
     } 
     catch (error) 
@@ -107,4 +180,4 @@ if (require.main === module) {
 
 
 
-export default app;
+export {app,io, downloadStates, downloadHistory};
