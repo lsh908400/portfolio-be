@@ -7,7 +7,7 @@ import { FolderConfig } from '../types/folder';
 import { NextFunction, Response } from 'express';
 import archiver from 'archiver';
 import logger from './logger';
-import { downloadHistory, downloadStates, io } from '../app';
+import { activeDownloadSessions, downloadHistory, downloadStates, io } from '../app';
 
 const publicDir = path.join(__dirname, '../../public');
 const codeMapPath = path.join(publicDir, 'code-map.json');
@@ -449,7 +449,7 @@ export const downloadFile = async (itemFullPath: string, fileName: string, conte
 
     const saveAndEmitEvent = (eventName: string, data: any) => {
       const eventData = { ...data, downloadId };
-      
+  
       downloadStates.set(downloadId, {
         ...downloadStates.get(downloadId),
         ...eventData,
@@ -457,14 +457,17 @@ export const downloadFile = async (itemFullPath: string, fileName: string, conte
       });
       
       // 히스토리에 이벤트 추가
+      if (!downloadHistory.has(downloadId)) {
+        downloadHistory.set(downloadId, []);
+      }
+      
       downloadHistory.get(downloadId).push({
         eventName,
         data: eventData,
         timestamp: Date.now()
       });
       
-      // 이벤트 발송
-      io.emit(eventName, eventData);
+      io.to(`download:${downloadId}`).emit(eventName, eventData);
     };
     
     saveAndEmitEvent('download:start', {
@@ -475,7 +478,6 @@ export const downloadFile = async (itemFullPath: string, fileName: string, conte
       currentProgress: 0
     });
     
-    // 진행 상황 주기적 전송 설정 (500ms마다)
     progressInterval = setInterval(() => {
       const progress = Math.min(Math.round((bytesRead / fileSize) * 100), 100);
       
@@ -715,9 +717,20 @@ export const downloadFolder = async (itemFullPath: string, folderName: string, d
       return eventData;
     };
     
-    // 실제 이벤트 발송
+    // 실제 이벤트 발송 - 특정 세션 룸에만 발송하도록 수정
     const emitEvent = (eventName: string, data: any) => {
-      io.emit(eventName, data);
+      const downloadId = data.downloadId;
+      
+      // 해당 다운로드 세션에 연결된 클라이언트에게만 이벤트 발송
+      io.to(`download:${downloadId}`).emit(eventName, data);
+      
+      // 다운로드 완료 이벤트인 경우 세션 정리 로직 추가 (선택적)
+      if (eventName === 'download:complete' || eventName === 'download:error' || eventName === 'download:canceled') {
+        // 활성 세션 표시 제거 (activeDownloadSessions 맵을 사용한다고 가정)
+        if (typeof activeDownloadSessions !== 'undefined' && activeDownloadSessions.has(downloadId)) {
+          activeDownloadSessions.delete(downloadId);
+        }
+      }
     };
     
     // 저장 후 발송
@@ -960,14 +973,3 @@ function formatBytes(bytes: number, decimals = 2): string {
   
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
-
-// const updateDownloadState = (downloadId : string, state : any) => {
-//   downloadStates.set(downloadId, {
-//     ...downloadStates.get(downloadId) || {},
-//     ...state,
-//     downloadId
-//   });
-  
-//   // 상태 변경 이벤트 발송
-//   io.emit('download:status', downloadStates.get(downloadId));
-// };

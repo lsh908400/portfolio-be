@@ -9,6 +9,7 @@ import { successMessage } from "../constants/successMessage";
 import archiver from "archiver";
 import logger from "../utils/logger";
 import { MAX_DOWNLOAD_SIZE } from "../constants";
+import { downloadHistory, downloadStates } from "../app";
 
 export const getFolder = async (req: Request, res: Response, next : NextFunction): Promise<void> => {
     try
@@ -210,56 +211,101 @@ export const uploadFolder = async (req: Request, res: Response, next: NextFuncti
     }
 };
 
-export const downloadFolderOrFile = async (req : Request, res : Response, next : NextFunction): Promise<void> => {
-    try
-    {
+export const initDownload = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
         const {filePath, fileName} = req.query;
-
+        
         if (!filePath || typeof filePath !== 'string' || !fileName || typeof fileName !== 'string') {
-            return next(createBadRequestError('folder'))
+            return next(createBadRequestError('folder'));
         }
-
+        
         const sanitizedFilePath = sanitizePath(filePath);
         const sanitizedFileName = sanitizePath(fileName);
-
+        
         const downloadId = randomUUID();
-
+        
         const itemFullPath = getFilePath(sanitizedFilePath, sanitizedFileName);
-
-        res.setHeader('Access-Control-Expose-Headers', 'X-Download-ID');
-        res.setHeader('X-Download-ID', downloadId);
-
+        
         try {
             await fs.promises.access(itemFullPath, fs.constants.F_OK);
         } catch (error) {
             return next(createNotFoundError('folder'));
         }
-
+        
         const stats = await fs.promises.stat(itemFullPath);
-
-        logger.info(`Download request for ${stats.isFile() ? 'file' : 'folder'}: ${sanitizedFilePath}/${sanitizedFileName}`);
-
+        
         if (stats.size > MAX_DOWNLOAD_SIZE && stats.isFile()) {
             return next(createPayloadTooLargeError('folder'));
         }
+        
+        // 다운로드 상태 초기화
+        downloadStates.set(downloadId, {
+            status: 'preparing',
+            downloadId,
+            isCompleted: false,
+            currentProgress: 0,
+            filePath: sanitizedFilePath,
+            fileName: sanitizedFileName,
+            isFile: stats.isFile(),
+            ready: false // 아직 다운로드 준비가 되지 않음
+        });
+        
+        // 히스토리 초기화
+        downloadHistory.set(downloadId, []);
+        
+        // 다운로드 ID 반환
+        res.status(200).json({
+            success: true,
+            downloadId,
+            fileName: sanitizedFileName,
+            isFile: stats.isFile(),
+            downloadUrl: `/api/folder/download-start?downloadId=${downloadId}`
+      });
+    } catch(err) {
+        console.error(err);
+        next(err);
+    }
+};
 
-        res.setHeader('Cache-Control', 'no-cache');
+export const startDownload = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { downloadId } = req.query;
         
-        
-        if (stats.isFile()) {
-            const contentType = determineContentType(itemFullPath);
-            await downloadFile(itemFullPath, sanitizedFileName, contentType, downloadId, res, next);
-        } else if (stats.isDirectory()) {
-            downloadFolder(itemFullPath,fileName.toString(),downloadId,res,next);
-        } else {
+        if (!downloadId || typeof downloadId !== 'string') {
             return next(createBadRequestError('folder'));
         }
-
-        logger.info(`Download completed for: ${sanitizedFilePath}/${sanitizedFileName}`);
+        
+        if (!downloadStates.has(downloadId)) {
+            return next(createNotFoundError('folder'));
+        }
+        
+        const downloadInfo = downloadStates.get(downloadId);
+        const { filePath, fileName, isFile } = downloadInfo;
+        
+        const itemFullPath = getFilePath(filePath, fileName);
+        
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Access-Control-Expose-Headers', 'X-Download-ID');
+        res.setHeader('X-Download-ID', downloadId);
+        
+        // 다운로드 준비 완료 표시
+        downloadStates.set(downloadId, {
+            ...downloadInfo,
+            ready: true
+        });
+        
+        logger.info(`Starting download for ${isFile ? 'file' : 'folder'}: ${filePath}/${fileName}`);
+        
+        if (isFile) {
+            const contentType = determineContentType(itemFullPath);
+            await downloadFile(itemFullPath, fileName, contentType, downloadId, res, next);
+        } else {
+            await downloadFolder(itemFullPath, fileName, downloadId, res, next);
+        }
+        
+        logger.info(`Download completed for: ${filePath}/${fileName}`);
+    } catch(err) {
+        console.error(err);
+        next(err);
     }
-    catch(err)
-    {
-        console.error(err)
-        next(err)
-    }
-}
+};

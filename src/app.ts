@@ -92,6 +92,7 @@ let io: SocketServer;
 
 const downloadStates = new Map();
 const downloadHistory = new Map();
+const activeDownloadSessions = new Map();
 
 const startServer = (): void => {
     try 
@@ -111,53 +112,64 @@ const startServer = (): void => {
         io.on('connection', (socket) => {
             logger.info('Client connected:', socket.id);
             
-            // 클라이언트가 다운로드 세션 시작을 요청
             socket.on('download:start', (sessionId) => {
-                // 클라이언트를 특정 세션 룸에 조인
-                socket.join(`download:${sessionId}`);
-                logger.info(`Client ${socket.id} joined download session ${sessionId}`);
+              socket.join(`download:${sessionId}`);
+              
+              // 룸 조인 후 룸 정보 출력
+              const rooms = io.sockets.adapter.rooms;
+              const room = rooms.get(`download:${sessionId}`);
+              logger.info(`Client ${socket.id} joined download session ${sessionId}. Room size: ${room ? room.size : 0}`);
+              
+              // 테스트 메시지 전송
+              socket.to(`download:${sessionId}`).emit('test:room', { message: 'Room join test' });
             });
 
             socket.on('download:request-status', (downloadId) => {
-                logger.info(`클라이언트가 다운로드 상태 요청: ${downloadId}`);
+              logger.info(`클라이언트가 다운로드 상태 요청: ${downloadId}`);
+              
+              if (downloadStates.has(downloadId)) {
+                const state = downloadStates.get(downloadId);
                 
-                if (downloadStates.has(downloadId)) {
-                  const state = downloadStates.get(downloadId);
+                socket.emit('download:status', state);
+                logger.info(`다운로드 상태 전송: ${downloadId}, 상태: ${state.status}`);
+                
+                // 다운로드가 완료되었고 활성 세션이 아닌 경우에만 히스토리 재생
+                if (state.isCompleted && !activeDownloadSessions.has(downloadId) && downloadHistory.has(downloadId)) {
+                  const events = downloadHistory.get(downloadId);
+                  logger.info(`완료된 다운로드 히스토리 재생: ${downloadId}, 이벤트 수: ${events.length}`);
                   
-                  // 현재 상태 전송
-                  socket.emit('download:status', state);
-                  logger.info(`다운로드 상태 전송: ${downloadId}, 상태: ${state.status}`);
+                  // 중요 이벤트만 선택 (시작, 25/50/75% 진행, 완료/에러/취소)
+                  const keyEvents = [
+                    events.find((e:any) => e.eventName === 'download:start'),
+                    ...events.filter((e:any) => e.eventName === 'download:progress' && [25, 50, 75].includes(e.data.progress)),
+                    events.find((e:any) => ['download:complete', 'download:error', 'download:canceled'].includes(e.eventName))
+                  ].filter(Boolean);
                   
-                  // 다운로드가 이미 완료된 경우 히스토리 재생
-                  if (state.isCompleted && downloadHistory.has(downloadId)) {
-                    const events = downloadHistory.get(downloadId);
-                    logger.info(`완료된 다운로드 히스토리 재생: ${downloadId}, 이벤트 수: ${events.length}`);
-                    
-                    // 중요 이벤트만 선택적으로 재생 (처음, 중간 진행, 마지막)
-                    const keyEvents = [
-                      events.find((e:any) => e.eventName === 'download:start'),
-                      ...events.filter((e:any) => e.eventName === 'download:progress' && [25, 50, 75].includes(e.data.progress)),
-                      events.find((e:any) => ['download:complete', 'download:error', 'download:canceled'].includes(e.eventName))
-                    ].filter(Boolean);
-                    
-                    // 이벤트 재생 (지연을 두고 순차적으로)
-                    let delay = 0;
-                    keyEvents.forEach(event => {
-                      setTimeout(() => {
-                        socket.emit(event.eventName, {
-                          ...event.data,
-                          isReplay: true
-                        });
-                      }, delay);
-                      delay += 200; // 각 이벤트 간 200ms 지연
-                    });
-                  }
-                } else {
-                  socket.emit('download:status', {
-                    status: 'unknown',
-                    message: '다운로드 정보를 찾을 수 없습니다',
-                    downloadId
+                  let delay = 0;
+                  keyEvents.forEach(event => {
+                    setTimeout(() => {
+                      socket.emit(event.eventName, {
+                        ...event.data,
+                        isReplay: true  // 이벤트가 재생된 것임을 표시
+                      });
+                    }, delay);
+                    delay += 100; // 각 이벤트 간 100ms 지연
                   });
+                }
+              } else {
+                socket.emit('download:status', {
+                  status: 'unknown',
+                  message: '다운로드 정보를 찾을 수 없습니다',
+                  downloadId
+                });
+              }
+            });
+            
+            // 다운로드 완료 시 활성 세션 표시 제거
+            socket.on('download:complete-received', (downloadId) => {
+                if (activeDownloadSessions.has(downloadId)) {
+                    activeDownloadSessions.delete(downloadId);
+                    logger.info(`다운로드 세션 완료 확인: ${downloadId}`);
                 }
             });
             
@@ -180,4 +192,4 @@ if (require.main === module) {
 
 
 
-export {app,io, downloadStates, downloadHistory};
+export {app,io, downloadStates, downloadHistory , activeDownloadSessions};

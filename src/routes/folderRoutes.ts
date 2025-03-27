@@ -1,11 +1,8 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { deleteFolder, downloadFolderOrFile, getFolder, postFolder, uploadFolder } from '../ctrl/folderCtrl';
+import { deleteFolder, getFolder, initDownload, postFolder, startDownload, uploadFolder } from '../ctrl/folderCtrl';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
-import os from 'os';
-import { calculateFolderSize, formatFileSize, getUserDirectoryPath } from '../utils/fileHandler';
-import { randomUUID } from 'crypto';
+import { calculateFolderSize, getUserDirectoryPath } from '../utils/fileHandler';
 
 // 업로드 디렉토리 설정
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -16,7 +13,8 @@ const router = Router();
 const folderConfig = {
     "root" : "/",
     "upload" : "/upload",
-    "download" : "/download",
+    "init" : "/initialize-download",
+    "start" : "/download-start"
 }
 
 const checkStorage = (req: Request, res: Response, next: NextFunction): void => {
@@ -66,8 +64,6 @@ const upload = multer({
       cb(null, targetDir);
     },
     filename: function (req, file, cb) {
-      console.log('원본 파일명 (raw):', file.originalname);
-      
       const originalPath = file.originalname.split('/');
       let fileName = originalPath[originalPath.length - 1];
       
@@ -95,6 +91,7 @@ router.get('', getFolder);
 router.post('', postFolder);
 router.delete('', deleteFolder);
 router.post(`${folderConfig.upload}`, checkStorage, upload.array('files'), uploadFolder);
-router.get(`${folderConfig.download}`,downloadFolderOrFile);
+router.get(`${folderConfig.init}`,initDownload);
+router.get(`${folderConfig.start}`,startDownload);
 
 export default router;
